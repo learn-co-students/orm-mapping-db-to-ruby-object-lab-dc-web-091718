@@ -40,4 +40,62 @@ class Student
     sql = "DROP TABLE IF EXISTS students"
     DB[:conn].execute(sql)
   end
+
+  def self.new_from_db(row)
+    student = self.new
+    student.id = row[0]
+    student.name = row[1]
+    student.grade = row[2]
+    student
+  end
+
+  def self.find_by_name(name)
+    sql = <<-SQL
+      SELECT * FROM students
+      WHERE name = ?
+      LIMIT 1;
+      SQL
+
+    # This is how the labs say to do it. Method #2 feels simpler/faster?
+    # DB[:conn].execute(sql, name).map do |row|
+    #   self.new_from_db(row)
+    # end.first
+
+    row = DB[:conn].execute(sql, name).first
+    self.new_from_db(row)
+  end
+
+  def self.all
+    sql = "SELECT * FROM students;"
+    DB[:conn].execute(sql).map do |row|
+      self.new_from_db(row)
+    end
+  end
+
+  def self.all_students_in_grade_9
+    # IRL would likely code this within the app, not as a DB call?
+    sql = "SELECT * FROM students WHERE grade = 9;"
+    DB[:conn].execute(sql).map { |row| self.new_from_db(row) }
+  end
+
+  def self.students_below_12th_grade
+    # IRL would likely code this within the app, not as a DB call?
+    sql = "SELECT * FROM students WHERE grade < 12;"
+    DB[:conn].execute(sql).map { |row| self.new_from_db(row) }
+  end
+
+  def self.first_X_students_in_grade_10(number)
+    sql = "SELECT * FROM students WHERE grade = 10 LIMIT ?"
+    DB[:conn].execute(sql, number).map { |row| self.new_from_db(row) }
+  end
+
+  def self.first_student_in_grade_10
+    sql = "SELECT * FROM students WHERE grade = 10 LIMIT 1"
+    self.new_from_db(DB[:conn].execute(sql).first)
+  end
+
+  def self.all_students_in_grade_X(grade)
+    sql = "SELECT * FROM students WHERE grade = ?"
+    DB[:conn].execute(sql, grade).map { |row| self.new_from_db(row) }
+  end
 end
